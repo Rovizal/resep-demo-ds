@@ -92,7 +92,7 @@
                         </ol>
 
                         <div class="alert alert-secondary mb-0">
-                            Catatan: resep yang sudah <strong>SERVED/PAID</strong> tidak dapat diedit. Jika ada koreksi, minta dokter membuat resep baru.
+                            Catatan: resep tidak dapat diedit. Jika ada koreksi, minta dokter membuat resep baru.
                         </div>
                     </div>
                 </div>
