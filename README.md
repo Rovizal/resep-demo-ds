@@ -16,7 +16,7 @@ CREATE DATABASE deltasurya CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ## 2) Salin & Atur Environment
 
-Buat file `.env` dari contoh .env.example, lalu sesuaikan koneksi database.
+Buat file `.env` dari contoh .env.example dan sesuaikan
 
 ```
 DB_CONNECTION=mysql
@@ -25,6 +25,10 @@ DB_PORT=3306
 DB_DATABASE=deltasurya
 DB_USERNAME=<user_db>
 DB_PASSWORD=<password_db>
+
+RSD_API_BASE=http://recruitment.rsdeltasurya.com/api/v1
+RSD_EMAIL=vizalji@gmail.com
+RSD_PASSWORD=081388971760
 ```
 
 **Catatan:** Gunakan `env.example` sebagai acuan konfigurasi yang diperlukan.
