@@ -1,6 +1,6 @@
-# Delta Surya — Setup Cepat
+# E-resep Demo
 
-Instruksi singkat testing local.
+Instruksi local.
 
 -   PHP 8.2+
 -   Composer
@@ -9,8 +9,6 @@ Instruksi singkat testing local.
 ## 1) Siapkan Database
 
 Buat database bernama **`deltasurya`**.
-
-Contoh MySQL:
 
 ```sql
 CREATE DATABASE deltasurya CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
