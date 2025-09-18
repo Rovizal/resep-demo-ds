@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class PriceService
@@ -12,7 +11,7 @@ class PriceService
     public function __construct(private RsdApiService $api) {}
     public function priceAt(string $medicineId, Carbon $at): ?int
     {
-        $dateStr = $at->toDateString();
+        $dateStr  = $at->toDateString();
         $cacheKey = "priceAt:{$medicineId}:{$dateStr}";
 
         return Cache::remember($cacheKey, 300, function () use ($medicineId, $dateStr) {

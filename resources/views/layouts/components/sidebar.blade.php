@@ -83,5 +83,12 @@
                  </a>
              </li>
          @endif
+
+         <li class="menu-item {{ $activeController === 'ActivityController' ? 'active' : '' }}">
+             <a href="{{ route('activity') }}" class="menu-link">
+                 <i class="menu-icon fa-solid fa-clock-rotate-left"></i>
+                 <div data-i18n="Activity Logs">Activity Logs</div>
+             </a>
+         </li>
      </ul>
  </aside>

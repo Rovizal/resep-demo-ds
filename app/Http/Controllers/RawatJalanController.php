@@ -16,7 +16,6 @@ use App\Services\PriceService;
 use App\Services\RsdApiService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -256,7 +255,6 @@ class RawatJalanController extends Controller
         $ase->dokter_id  = $r->user()->id;
         $ase->created_by = $r->user()->name;
 
-        // Simpan
         $ase->fill($data)->save();
 
         ActivityLog::record('asesmen.upserted', $ase, [
@@ -315,7 +313,7 @@ class RawatJalanController extends Controller
 
         $rows = Diagnosis::where('rawat_pasien_id', $rawat->id)
             ->orderByDesc('id')
-            ->get(['kode', 'diagnosis', 'kode_penyerta', 'diagnosis_penyerta', 'keterangan']);
+            ->get(['id', 'kode', 'diagnosis', 'kode_penyerta', 'diagnosis_penyerta', 'keterangan']);
 
         return response()->json(['data' => $rows]);
     }
@@ -338,6 +336,29 @@ class RawatJalanController extends Controller
         ]));
 
         return response()->json(['message' => 'Diagnosa ditambahkan.', 'id' => $row->id]);
+    }
+
+    public function diagnosisDelete(Request $r)
+    {
+        $data = $r->validate([
+            'id' => ['required', 'integer', 'exists:tbl_diagnosis,id'],
+        ]);
+
+        $row = Diagnosis::findOrFail($data['id']);
+
+        $rawat = RawatPasien::findOrFail($row->rawat_pasien_id);
+        if ($rawat->dokter_id !== $r->user()->id) {
+            abort(403);
+        }
+
+        $row->delete();
+
+        ActivityLog::record('diagnosis.deleted', $row, [
+            'diagnosis' => $row->diagnosis,
+            'kode'      => $row->kode,
+        ], $r->user()?->id);
+
+        return response()->json(['message' => 'Diagnosa dihapus.']);
     }
 
     public function tindakanSearch(Request $r)
@@ -379,6 +400,7 @@ class RawatJalanController extends Controller
             ->where('rawat_tindakan.rawat_pasien_id', $rawat->id)
             ->orderByDesc('rawat_tindakan.id')
             ->get([
+                'rawat_tindakan.id',
                 'tindakan.kode_internal',
                 'tindakan.nama_tindakan',
                 'rawat_tindakan.qty'
@@ -404,6 +426,31 @@ class RawatJalanController extends Controller
         ]);
 
         return response()->json(['message' => 'Tindakan ditambahkan.']);
+    }
+
+    public function tindakanDelete(Request $r)
+    {
+        $data = $r->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $row = DB::table('rawat_tindakan')->where('id', $data['id'])->first();
+        if (!$row) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        $rawat = RawatPasien::findOrFail($row->rawat_pasien_id);
+        if ($rawat->dokter_id !== $r->user()->id) {
+            abort(403);
+        }
+
+        DB::table('rawat_tindakan')->where('id', $data['id'])->delete();
+
+        ActivityLog::record('tindakan.deleted', $rawat, [
+            'rawat_tindakan_id' => $data['id'],
+        ], $r->user()?->id);
+
+        return response()->json(['message' => 'Tindakan dihapus.']);
     }
 
     public function eresepList(Request $request)
@@ -435,7 +482,6 @@ class RawatJalanController extends Controller
             'aturan_pakai'  => $r->aturan_pakai ?? '',
         ])->values();
 
-        // editable hanya jika status DRAFT dan user adalah dokter pemilik
         $editable   = ($rx->status === EResep::STATUS_DRAFT)
             && (auth()->id() === optional($rx->rawat)->dokter_id);
         $canSubmit  = $editable && $rows->count() > 0;
@@ -515,7 +561,6 @@ class RawatJalanController extends Controller
                     'total_amount'     => 0,
                 ]);
             } else {
-                // bersihkan item lama (masih DRAFT)
                 $header->items()->delete();
             }
 
@@ -566,7 +611,6 @@ class RawatJalanController extends Controller
             return response()->json(['message' => 'Resep sudah dikirim/diproses.'], 409);
         }
 
-        // Lock -> ubah status ke SUBMITTED
         $header->status = EResep::STATUS_SUBMITTED;
         $header->save();
         $header->recalcTotal();

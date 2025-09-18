@@ -29,13 +29,12 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Role Check
             $user = Auth::user();
             if (!in_array($user->role, ['pharmacist', 'doctor'])) {
                 Auth::logout();
                 return response()->json([
                     'message' => 'Access forbidden.',
-                ], 403); // 403
+                ], 403);
             }
 
             return response()->json([

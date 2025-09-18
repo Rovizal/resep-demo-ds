@@ -6,11 +6,9 @@
 
 @push('additional_styles')
     <style>
-        /* --- E-Resep: Grid 3 kolom (Obat | Qty | Aksi) --- */
         #frmResep .rx-item {
             display: grid;
             grid-template-columns: 1fr 140px 120px;
-            /* ubah angka sesuai selera */
             gap: .5rem .75rem;
             align-items: start;
         }
@@ -25,9 +23,6 @@
             min-height: 1.25rem;
         }
 
-        /* jaga tinggi teks harga konsisten */
-
-        /* --- dropdown autocomplete --- */
         #frmResep .rx-med {
             position: relative;
         }
@@ -68,30 +63,56 @@
                     </div>
                 </div>
 
-                {{-- KARTU INFO PASIEN (minimalis) --}}
-                <div class="card-body py-3">
-                    <div class="d-flex flex-wrap align-items-start gap-4">
-                        <div>
-                            <div class="fs-6 fw-semibold">
-                                {{ $row->pasien->panggilan ? $row->pasien->panggilan . ' ' : '' }}{{ $row->pasien->nama }}
+                @php
+                    $p = $row->pasien;
+                    $jk = $p?->jenis_kelamin === 'male' ? 'Laki-laki' : ($p?->jenis_kelamin === 'female' ? 'Perempuan' : '-');
+                    $dob = $p?->tanggal_lahir;
+                    $dobFmt = $dob ? \Carbon\Carbon::parse($dob)->format('d/m/Y') : '-';
+                    $age = $dob ? \Carbon\Carbon::parse($dob)->age : null;
+                @endphp
+
+                <div class="card-body py-3 mb-2">
+                    <div class="d-flex align-items-start gap-3 flex-wrap">
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <h6 class="mb-0">
+                                    {{ $p->panggilan ? $p->panggilan . ' ' : '' }}{{ $p->nama }}
+                                </h6>
+                                <span class="badge bg-light text-dark border">RM: {{ $p->no_rm }}</span>
                             </div>
-                            <div class="small text-muted">No. RM: <span class="fw-semibold">{{ $row->pasien->no_rm }}</span></div>
-                        </div>
-                        <div class="small">
-                            <div>JK: {{ $row->pasien->jenis_kelamin === 'male' ? 'Laki-laki' : ($row->pasien->jenis_kelamin === 'female' ? 'Perempuan' : '-') }}</div>
-                            <div>Tgl Lahir: {{ optional($row->pasien->tanggal_lahir)->format('d/m/Y') ?? '-' }}</div>
-                        </div>
-                        <div class="small">
-                            <div>Masuk: {{ optional($row->tanggal_masuk)->format('d/m/Y H:i') }}</div>
-                            <div>Telp/HP: {{ $row->pasien->nohp ?? ($row->pasien->telepon ?? '-') }}</div>
-                        </div>
-                        <div class="small flex-grow-1">
-                            <div class="text-truncate" title="{{ $row->pasien->alamat }}">Alamat: {{ $row->pasien->alamat }}</div>
+
+                            <div class="row g-3 mt-2 small">
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted">Jenis Kelamin</div>
+                                    <div class="fw-medium">{{ $jk }}</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted">Tgl Lahir</div>
+                                    <div class="fw-medium">
+                                        {{ $dobFmt }}@if ($age)
+                                            <span class="text-muted"> ({{ $age }} th)</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted">Tanggal Masuk</div>
+                                    <div class="fw-medium">{{ optional($row->tanggal_masuk)->format('d/m/Y H:i') }}</div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted">Telp/HP</div>
+                                    <div class="fw-medium">{{ $p->nohp ?? ($p->telepon ?? '—') }}</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-2 small">
+                                <div class="text-muted">Alamat</div>
+                                <div class="fw-medium text-break">{{ $p->alamat ?: '—' }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- TABS --}}
                 <div class="card-body pt-0">
                     <ul class="nav nav-tabs" id="rajalTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -106,7 +127,6 @@
                     </ul>
 
                     <div class="tab-content pt-3" id="rajalTabsContent">
-                        {{-- TAB ASESMEN (tetap load saat halaman dibuka) --}}
                         <div class="tab-pane fade show active" id="asesmen" role="tabpanel" aria-labelledby="asesmen-tab">
                             <form id="formAsesmen" enctype="multipart/form-data" class="mt-3">
                                 @csrf
@@ -125,15 +145,22 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <input type="range" min="0" max="10" value="0" class="form-range" id="rngNyeri"
                                                 oninput="document.getElementById('nyeriVal').value=this.value">
-                                            <input type="number" min="0" max="10" value="0" id="nyeriVal" name="level_nyeri" class="form-control"
-                                                style="width:90px">
+                                            <input type="text" id="nyeriVal" name="level_nyeri" class="form-control" style="width:90px" placeholder="0–10" inputmode="numeric"
+                                                oninput="
+                                                        this.value=this.value.replace(/[^0-9]/g,'');
+                                                        if(this.value!==''){
+                                                            var v=parseInt(this.value,10);
+                                                            if(v>10)this.value='10';
+                                                        }
+                                                        document.getElementById('rngNyeri').value=this.value||0;
+                                                        ">
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label">Penurunan Berat Badan</label>
                                         <select class="form-select" name="penurunan_berat_badan">
-                                            <option value="">-</option>
+                                            <option value="">— Pilih —</option>
                                             <option value="0">Tidak</option>
                                             <option value="1">Ya</option>
                                         </select>
@@ -142,7 +169,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Kurang Nafsu Makan</label>
                                         <select class="form-select" name="kurang_nafsu_makan">
-                                            <option value="">-</option>
+                                            <option value="">— Pilih —</option>
                                             <option value="0">Tidak</option>
                                             <option value="1">Ya</option>
                                         </select>
@@ -151,7 +178,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Kondisi Gizi</label>
                                         <select class="form-select" name="kondisi_gizi">
-                                            <option value="">-</option>
+                                            <option value="">— Pilih —</option>
                                             <option value="0">Baik</option>
                                             <option value="1">Lebih</option>
                                             <option value="2">Kurang</option>
@@ -164,38 +191,70 @@
                                         <input type="text" name="tanda_vital_td" class="form-control" placeholder="120/80">
                                     </div>
 
-                                    <div class="col-md-3"><label class="form-label">Nadi</label><input type="number" name="tanda_vital_nadi" class="form-control" min="20"
-                                            max="250"></div>
-                                    <div class="col-md-3"><label class="form-label">RR</label><input type="number" name="tanda_vital_rr" class="form-control" min="5"
-                                            max="80"></div>
-                                    <div class="col-md-3"><label class="form-label">SpO2</label><input type="number" name="tanda_vital_spo2" class="form-control" min="50"
-                                            max="100"></div>
-                                    <div class="col-md-3"><label class="form-label">Suhu (°C)</label><input type="number" step="0.1" name="suhu" class="form-control"
-                                            min="30" max="45"></div>
-
-                                    <div class="col-md-3"><label class="form-label">Tinggi (cm)</label><input type="number" name="tinggi_badan" class="form-control"
-                                            min="0" max="300"></div>
-                                    <div class="col-md-3"><label class="form-label">Berat (kg)</label><input type="number" step="0.1" name="berat_badan" class="form-control"
-                                            min="0" max="500"></div>
-
-                                    <div class="col-md-12"><label class="form-label">Keluhan Utama</label>
-                                        <textarea name="keluhan_utama" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Nadi</label>
+                                        <input type="text" name="tanda_vital_nadi" class="form-control" placeholder="80" inputmode="numeric"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                     </div>
-                                    <div class="col-md-12"><label class="form-label">Riwayat Penyakit Sekarang</label>
-                                        <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">RR</label>
+                                        <input type="text" name="tanda_vital_rr" class="form-control" placeholder="18" inputmode="numeric"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                     </div>
-                                    <div class="col-md-12"><label class="form-label">Riwayat Penyakit Dahulu</label>
-                                        <textarea name="riwayat_penyakit_dahulu" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">SpO2</label>
+                                        <input type="text" name="tanda_vital_spo2" class="form-control" placeholder="98" inputmode="numeric"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                     </div>
-                                    <div class="col-md-12"><label class="form-label">Riwayat Penyakit Keluarga</label>
-                                        <textarea name="riwayat_penyakit_keluarga" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Suhu (°C)</label>
+                                        <input type="text" name="suhu" class="form-control" placeholder="36.8" inputmode="decimal"
+                                            oninput="
+            this.value=this.value
+              .replace(/[^0-9.]/g,'')
+              .replace(/(\..*)\./g,'$1');
+          ">
                                     </div>
 
-                                    <div class="col-md-12"><label class="form-label">Alergi Makanan</label>
-                                        <textarea name="alergi_makanan" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Tinggi (cm)</label>
+                                        <input type="text" name="tinggi_badan" class="form-control" placeholder="170" inputmode="numeric"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                     </div>
-                                    <div class="col-md-12"><label class="form-label">Alergi Obat</label>
-                                        <textarea name="alergi_obat" class="form-control" rows="2"></textarea>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Berat (kg)</label>
+                                        <input type="text" name="berat_badan" class="form-control" placeholder="65.5" inputmode="decimal"
+                                            oninput="
+                                                    this.value=this.value
+                                                    .replace(/[^0-9.]/g,'')
+                                                    .replace(/(\..*)\./g,'$1');
+                                                ">
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label">Keluhan Utama</label>
+                                        <textarea name="keluhan_utama" class="form-control" rows="2" placeholder="Cth: Nyeri perut kanan bawah sejak 2 hari…"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Riwayat Penyakit Sekarang</label>
+                                        <textarea name="riwayat_penyakit_sekarang" class="form-control" rows="2" placeholder="Cth: Keluhan muncul setelah…"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Riwayat Penyakit Dahulu</label>
+                                        <textarea name="riwayat_penyakit_dahulu" class="form-control" rows="2" placeholder="Cth: DM tipe 2 (2017), hipertensi (2019)…"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Riwayat Penyakit Keluarga</label>
+                                        <textarea name="riwayat_penyakit_keluarga" class="form-control" rows="2" placeholder="Cth: Ayah DM, ibu hipertensi…"></textarea>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="form-label">Alergi Makanan</label>
+                                        <textarea name="alergi_makanan" class="form-control" rows="2" placeholder="Cth: Udang (gatal), kacang tanah…"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Alergi Obat</label>
+                                        <textarea name="alergi_obat" class="form-control" rows="2" placeholder="Cth: Amoxicillin (ruam), NSAID (sesak)…"></textarea>
                                     </div>
 
                                     <div class="col-md-12">
@@ -222,12 +281,10 @@
                             </form>
                         </div>
 
-                        {{-- TAB DIAGNOSA & TINDAKAN (lazy-load pada klik tab) --}}
                         <div class="tab-pane fade" id="dx-tindakan" role="tabpanel" aria-labelledby="dx-tindakan-tab">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="card border-0 shadow-sm h-100">
-                                        <div class="card-header py-2 fw-semibold">Diagnosa (ICD10)</div>
                                         <div class="card-body">
                                             <form id="frmDx" class="row g-2">
                                                 @csrf
@@ -278,6 +335,7 @@
                                                             <th>Kode Penyerta</th>
                                                             <th>Diagnosis Penyerta</th>
                                                             <th>Keterangan</th>
+                                                            <th class="text-center" style="width:80px;">Aksi</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody></tbody>
@@ -314,7 +372,8 @@
                                                         <tr>
                                                             <th>Kode</th>
                                                             <th>Nama</th>
-                                                            <th>Qty</th>
+                                                            <th class="text-center" style="width:60px;">Qty</th>
+                                                            <th class="text-center" style="width:80px;">Aksi</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody></tbody>
@@ -327,7 +386,6 @@
                             </div>
                         </div>
 
-                        {{-- TAB E-RESEP (lazy-load pada klik tab) --}}
                         <div class="tab-pane fade" id="eresep" role="tabpanel" aria-labelledby="eresep-tab">
                             <form id="frmResep" class="border rounded p-3">
                                 @csrf
@@ -383,7 +441,7 @@
                             </form>
                         </div>
                     </div>
-                </div> {{-- /card-body --}}
+                </div>
             </div>
         </div>
     </div>
@@ -396,7 +454,6 @@
             const RAWAT_ID = @json($row->id);
             const PASIEN_ID = @json($row->pasien_id);
 
-            // --- flags lazy-load ---
             const LOADED = {
                 dxInit: false,
                 dx: false,
@@ -404,13 +461,11 @@
                 resep: false
             };
 
-            // ===== Helpers =====
             function showMsg($el, text) {
                 $el.text(text).removeClass('d-none');
                 setTimeout(() => $el.addClass('d-none'), 2000);
             }
 
-            // ===== ASESMEN (autoload on page load) =====
             function prefillAsesmen(d) {
                 if (!d) return;
                 $('[name=keluhan_utama]').val(d.keluhan_utama || '');
@@ -464,6 +519,7 @@
                 }).done(function(res) {
                     $er.addClass('d-none').text('');
                     $ok.removeClass('d-none').text(res.message || 'Tersimpan.');
+                    toastShow(res.message);
                     if (res.file_url) {
                         $('#asesmenFileLink').html(`<a href="${res.file_url}" target="_blank">Lihat berkas asesmen saat ini</a>`);
                     }
@@ -486,7 +542,6 @@
                 $('#rngNyeri').val(this.value);
             });
 
-            // ===== DIAGNOSA & TINDAKAN (fungsi & lazy init) =====
             function initIcd($el, mode) {
                 return $el.select2({
                     placeholder: mode === 'code' ? 'Ketik kode ICD-10…' : 'Ketik nama ICD-10…',
@@ -525,7 +580,6 @@
                 if (LOADED.dxInit) return;
                 LOADED.dxInit = true;
 
-                // pasangan ICD utama
                 const $uKode = initIcd($('#icd_utama_kode'), 'code');
                 const $uNama = initIcd($('#icd_utama_nama'), 'name');
                 let syncing = false;
@@ -556,7 +610,6 @@
                         $('#icd_utama_kode').val(null).trigger('change');
                     });
 
-                // pasangan ICD penyerta
                 const $pKode = initIcd($('#icd_penyerta_kode'), 'code');
                 const $pNama = initIcd($('#icd_penyerta_nama'), 'name');
                 $('#icd_penyerta_kode').on('select2:select', e => syncPair($('#icd_penyerta_nama'), $('#dx_kode_p'), $('#dx_nama_p'), e.params.data, 'name'))
@@ -572,7 +625,6 @@
                         $('#icd_penyerta_kode').val(null).trigger('change');
                     });
 
-                // validasi minimal
                 $('#frmDx').on('submit', function(e) {
                     if (!$('#dx_kode').val() || !$('#dx_nama').val()) {
                         e.preventDefault();
@@ -580,7 +632,6 @@
                     }
                 });
 
-                // Select2 tindakan + submit
                 window.$tindakSel = $('#tindakan_id').select2({
                     placeholder: 'Ketik nama/kode tindakan…',
                     minimumInputLength: 2,
@@ -610,7 +661,6 @@
                         .always(() => $btn.prop('disabled', false));
                 });
 
-                // submit diagnosa
                 $('#frmDx').on('submit', function(e) {
                     e.preventDefault();
                     const $btn = $(this).find('button[type=submit]').prop('disabled', true);
@@ -633,14 +683,57 @@
                     .done(res => {
                         const $tb = $('#tblDx tbody').empty();
                         (res.data || []).forEach(row => {
-                            $('<tr/>').append(`<td>${row.kode||'-'}</td>`)
-                                .append(`<td>${row.diagnosis||'-'}</td>`)
-                                .append(`<td>${row.kode_penyerta||'-'}</td>`)
-                                .append(`<td>${row.diagnosis_penyerta||'-'}</td>`)
-                                .append(`<td>${row.keterangan||''}</td>`).appendTo($tb);
+                            $('<tr/>')
+                                .append(`<td>${row.kode || '-'}</td>`)
+                                .append(`<td>${row.diagnosis || '-'}</td>`)
+                                .append(`<td>${row.kode_penyerta || '-'}</td>`)
+                                .append(`<td>${row.diagnosis_penyerta || '-'}</td>`)
+                                .append(`<td>${row.keterangan || ''}</td>`)
+                                .append(`
+                                        <td class="text-center">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger btn-del-dx"
+                                                    data-id="${row.id}">
+                                            <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        `)
+                                .appendTo($tb);
                         });
                     });
             }
+
+            $('#tblDx').on('click', '.btn-del-dx', function() {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Hapus diagnosa ini?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: () => {
+                        return $.post("{{ route('rajal.diagnosis.delete') }}", {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            id
+                        }).catch(xhr => {
+                            Swal.showValidationMessage(xhr?.responseJSON?.message || 'Gagal menghapus diagnosa.');
+                        });
+                    }
+                }).then((r) => {
+                    if (r.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terhapus',
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                        loadDx();
+                    }
+                });
+            });
 
             function loadTindakan() {
                 $.get("{{ route('rajal.tindakan.list') }}", {
@@ -649,14 +742,56 @@
                     .done(res => {
                         const $tb = $('#tblTindakan tbody').empty();
                         (res.data || []).forEach(r => {
-                            $('<tr/>').append(`<td>${r.kode_internal||'-'}</td>`)
-                                .append(`<td>${r.nama_tindakan||'-'}</td>`)
-                                .append(`<td>${r.qty||1}</td>`).appendTo($tb);
+                            $('<tr/>')
+                                .append(`<td>${r.kode_internal || '-'}</td>`)
+                                .append(`<td>${r.nama_tindakan || '-'}</td>`)
+                                .append(`<td class="text-center">${r.qty || 1}</td>`)
+                                .append(`
+                                    <td class="text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger btn-del-tdk"
+                                                data-id="${r.id}">
+                                        <i class="fa fa-trash"></i>
+                                        </button>
+                                    </td>
+                                    `)
+                                .appendTo($tb);
                         });
                     });
             }
 
-            // ===== E-RESEP (lazy-load) =====
+            $('#tblTindakan').on('click', '.btn-del-tdk', function() {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Hapus tindakan ini?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, hapus',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: () => {
+                        return $.post("{{ route('rajal.tindakan.delete') }}", {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            id
+                        }).catch(xhr => {
+                            Swal.showValidationMessage(xhr?.responseJSON?.message || 'Gagal menghapus tindakan.');
+                        });
+                    }
+                }).then((r) => {
+                    if (r.isConfirmed) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terhapus',
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                        loadTindakan();
+                    }
+                });
+            });
+
             const $items = $('#items'),
                 $tpl = $('#rowTpl');
 
@@ -682,7 +817,6 @@
                     const meta = res?.meta || {};
                     $('#rxStatus').text('Status: ' + (meta.status || '-'));
 
-                    // render rows
                     if (arr.length) {
                         arr.forEach(it => appendRow({
                             medicine_id: it.medicine_id,
@@ -695,10 +829,8 @@
                         appendRow();
                     }
 
-                    // kunci UI jika tidak editable
                     toggleRxEditable(!!meta.editable);
 
-                    // tombol submit enable kalau boleh
                     $('#btnSubmitRx').prop('disabled', !meta.can_submit).toggleClass('disabled', !meta.can_submit);
 
                 } catch (e) {
@@ -711,18 +843,14 @@
             }
 
             function toggleRxEditable(editable) {
-                // input & tombol row
                 $('#frmResep .item-row :input').prop('disabled', !editable);
-                // tombol form
                 $('#addItem').prop('disabled', !editable);
                 $('#btnSaveDraft').prop('disabled', !editable);
-                // tombol hapus di tiap baris
                 if (!editable) {
                     $('#frmResep .rm-row').addClass('disabled').prop('disabled', true);
                 }
             }
 
-            // tambah/hapus baris
             $('#addItem').on('click', () => appendRow());
             $items.on('click', '.rm-row', function() {
                 $(this).closest('.item-row').remove();
@@ -769,7 +897,6 @@
                 });
             });
 
-            // autocomplete obat
             let acTimer = null;
             $items.on('input', '.med-name', function() {
                 const $txt = $(this),
@@ -845,12 +972,11 @@
                     }).done(() => {
                         showMsg($('#resepMsg'), 'Resep disimpan (DRAFT).');
                         toastShow('Resep disimpan (DRAFT).');
-                        if (LOADED.resep) loadResep(); // refresh dari server
+                        if (LOADED.resep) loadResep();
                     }).fail(xhr => alert(xhr.responseJSON?.message || 'Gagal menyimpan resep'))
                     .always(() => $btn.prop('disabled', false));
             });
 
-            // ===== LAZY-LOAD PER TAB =====
             $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
                 const target = $(e.target).attr('data-bs-target');
                 if (target === '#dx-tindakan') {

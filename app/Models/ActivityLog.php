@@ -27,7 +27,6 @@ class ActivityLog extends Model
         'updated_at' => 'datetime',
     ];
 
-    // Relasi
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
