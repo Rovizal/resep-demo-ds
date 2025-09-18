@@ -27,8 +27,8 @@ DB_USERNAME=<user_db>
 DB_PASSWORD=<password_db>
 
 RSD_API_BASE=http://recruitment.rsdeltasurya.com/api/v1
-RSD_EMAIL=vizalji@gmail.com
-RSD_PASSWORD=081388971760
+RSD_EMAIL=email_akses
+RSD_PASSWORD=password_akses
 ```
 
 **Catatan:** Gunakan `env.example` sebagai acuan konfigurasi yang diperlukan.
