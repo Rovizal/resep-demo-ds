@@ -19,7 +19,7 @@ class ResepController extends Controller
     {
         $q = EResep::query()
             ->with(['rawat.pasien', 'dokter'])
-            ->whereIn('status', [EResep::STATUS_DRAFT, EResep::STATUS_SUBMITTED])
+            // ->whereIn('status', [EResep::STATUS_DRAFT, EResep::STATUS_SUBMITTED])
             ->orderByDesc('id');
 
         return DataTables::eloquent($q)
