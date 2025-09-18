@@ -184,8 +184,7 @@
                                 <script>
                                     document.write(new Date().getFullYear());
                                 </script>
-                                made with ❤️ by
-                                <a href="https://pixinvent.com" target="_blank" class="footer-link fw-medium">SkyPixma</a>
+                                made with ❤️ by Delta Surya
                             </div>
                         </div>
                     </footer>
