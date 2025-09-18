@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-12 col-lg-12 col-xl-12 col-xxl-3 mb-4">
+        <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-start">
