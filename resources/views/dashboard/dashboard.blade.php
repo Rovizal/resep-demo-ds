@@ -41,13 +41,6 @@
 
                         <div class="table-responsive">
                             <table class="table table-sm w-auto">
-                                <thead>
-                                    <tr>
-                                        <th>Status</th>
-                                        <th>Siapa yang bisa edit</th>
-                                        <th>Catatan</th>
-                                    </tr>
-                                </thead>
                                 <tbody>
                                     <tr>
                                         <td><span class="badge bg-secondary">DRAFT</span></td>
