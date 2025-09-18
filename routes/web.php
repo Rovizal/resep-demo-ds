@@ -4,12 +4,10 @@ use App\Http\Controllers\ActivityController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\FarmasiController;
 use App\Http\Controllers\RawatJalanController;
 use App\Http\Controllers\ResepController;
-use App\Models\ActivityLog;
 
-// Root → login
+// Login
 Route::redirect('/', '/login');
 
 Route::middleware('guest')->group(function () {
